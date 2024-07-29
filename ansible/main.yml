@@ -5,24 +5,38 @@
 
   vars:
     app_dir: /opt/stage_5b
+    log_dir: /var/log/stage_5b
     app_user: hng 
     db_name: admindb
     db_user: admin
     db_password: dbpassword
+    profile: local
+    node_env: development
+    port: 3000
+    db_host: localhost
+    db_port: 5432
+    db_entities: "dist/src/modules/**/entities/**/*.entity{.ts,.js}"
+    db_migrations: "dist/**/migrations/*{.ts,.js}"
+    db_type: postgres
+    db_ssl: "true"
+    jwt_secret: someSecrets
+    jwt_expiry_timeframe: 3600
 
   tasks:
-  #create hng user
     - name: Create hng user
       user:
         name: "{{ app_user }}"
         groups: sudo
         shell: /bin/bash
 
-  #run apt update
     - name: Update apt cache
       apt: update_cache=yes
     
-  #clone repo into the app dir
+    - name: Install Node.js
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+
     - name: Clone repository
       git:
         repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
@@ -30,24 +44,148 @@
         dest: "{{ app_dir }}"
       become_user: "{{ app_user }}"
 
-  #install necessary dependencies 
     - name: Install base dependencies
       apt:
         name: 
           - git 
           - npm
           - postgresql
-          - 
+          - nginx
+        state: present
 
-  #install nestjs globally
     - name: Install NestJS CLI globally
       npm:
         name: '@nestjs/cli'
         global: yes
 
-  #install projects dependencies  
     - name: Install project dependencies
       npm:
         path: "{{ app_dir }}"
-        ci: yes
       become_user: "{{ app_user }}"
+
+    - name: Create .env file
+      copy:
+        content: |
+          PROFILE={{ profile }}
+          NODE_ENV={{ node_env }}
+          PORT={{ port }}
+          DB_USERNAME={{ db_user }}
+          DB_PASSWORD={{ db_password }}
+          DB_DATABASE={{ db_name }}
+          DB_HOST={{ db_host }}
+          DB_PORT={{ db_port }}
+          DB_ENTITIES={{ db_entities }}
+          DB_MIGRATIONS={{ db_migrations }}
+          DB_TYPE={{ db_type }}
+          DB_SSL={{ db_ssl }}
+          JWT_SECRET={{ jwt_secret }}
+          JWT_EXPIRY_TIMEFRAME={{ jwt_expiry_timeframe }}
+        dest: "{{ app_dir }}/.env"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0600'
+      notify: Restart application
+
+    - name: Configure PostgreSQL
+      become_user: postgres
+      postgresql_db:
+        name: "{{ db_name }}"
+        state: present
+
+    - name: Create PostgreSQL user
+      become_user: postgres
+      postgresql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        role_attr_flags: CREATEDB
+
+    - name: Save PostgreSQL credentials
+      copy:
+        content: "DB_USER={{ db_user }}\nDB_PASSWORD={{ db_password }}"
+        dest: /var/secrets/pg_pw.txt
+        mode: '0600'
+
+    - name: Install typeorm globally
+      npm:
+        name: typeorm
+        global: yes
+        state: present
+
+    - name: Generate migration file
+      shell: cd {{ app_dir }} && npm run migration:generate
+      become_user: "{{ app_user }}"
+
+    - name: Run migrations
+      shell: cd {{ app_dir }} && npm run migration:run
+      become_user: "{{ app_user }}"
+
+    - name: Install RabbitMQ
+      apt:
+        name: rabbitmq-server
+        state: present
+
+    - name: Enable RabbitMQ plugins
+      rabbitmq_plugin:
+        names:
+          - rabbitmq_management
+        state: enabled
+
+    - name: Enable and start RabbitMQ service
+      systemd:
+        name: rabbitmq-server
+        enabled: yes
+        state: started
+
+    - name: Set up Nginx configuration
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+      notify: Restart Nginx
+
+    - name: Enable Nginx site
+      file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      notify: Restart Nginx
+
+    - name: Create log directory
+      file:
+        path: "{{ log_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0755'
+
+    - name: Create log files
+      file:
+        path: "{{ item }}"
+        state: touch
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0644'
+      loop:
+        - "{{ log_dir }}/error.log"
+        - "{{ log_dir }}/out.log"
+
+    - name: Build NestJS application
+      shell: cd {{ app_dir }} && npm run build
+      become_user: "{{ app_user }}"
+
+    - name: Set up systemd service
+      template:
+        src: nestjs.service.j2
+        dest: /etc/systemd/system/nestjs.service
+      notify: Restart application
+
+  handlers:
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted
+
+    - name: Restart application
+      systemd:
+        name: nestjs
+        state: restarted
+        daemon_reload: yes
