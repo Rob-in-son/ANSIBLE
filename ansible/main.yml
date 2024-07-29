@@ -116,16 +116,13 @@
 
     - name: Configure PostgreSQL
       become_user: postgres
-      postgresql_db:
-        name: "{{ db_name }}"
-        state: present
-
-    - name: Create PostgreSQL user
-      become_user: postgres
-      postgresql_user:
-        name: "{{ db_user }}"
-        password: "{{ db_password }}"
-        role_attr_flags: CREATEDB
+      shell: |
+        psql -c "CREATE DATABASE {{ db_name }};"
+        psql -c "CREATE USER {{ db_user }} WITH ENCRYPTED PASSWORD '{{ db_password }}';"
+        psql -c "GRANT ALL PRIVILEGES ON DATABASE {{ db_name }} TO {{ db_user }};"
+      args:
+        executable: /bin/bash
+      become: no
 
     - name: Save PostgreSQL credentials
       copy:
