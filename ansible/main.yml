@@ -42,20 +42,26 @@
         path: /opt/my_app
         state: directory
 
-    - name: Clone repository if not present
+    - name: Check if repository is already cloned
+      stat:
+        path: "{{ app_dir }}/.git"
+      register: git_repo
+
+    - name: Clone repository
       git:
         repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
         version: devops
         dest: "{{ app_dir }}"
         update: yes
-      when: not ansible_facts['ansible_env'].get('GIT_DIR') | default('') | length
+      when: not git_repo.stat.exists
 
-    - name: Set ownership of cloned repository
-      file:
-        path: "{{ app_dir }}"
-        owner: "{{ app_user }}"
-        group: "{{ app_user }}"
-        recurse: yes
+    - name: Update repository if already cloned
+      git:
+        repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
+        version: devops
+        dest: "{{ app_dir }}"
+        update: yes
+      when: git_repo.stat.exists
 
     - name: Install base dependencies
       apt:
