@@ -57,23 +57,24 @@
           - npm
           - postgresql
         state: present
-        
-    - name: Add Nginx signing key
-      apt_key:
-        url: https://nginx.org/keys/nginx_signing.key
-        state: present
 
-    - name: Add Nginx repository
+    - name: Add Nginx GPG key
+      apt_key:
+        url: 'https://nginx.org/keys/nginx_signing.key'
+        state: present
+        
+    - name: Add Nginx official repository
       apt_repository:
-        repo: deb http://nginx.org/packages/ubuntu focal nginx
+        repo: 'deb http://nginx.org/packages/ubuntu/ {{ ansible_distribution_release | lower }} nginx'
         state: present
         filename: nginx
-
+        
     - name: Install Nginx 1.26
       apt:
-        name: nginx=1.26.0
+        name: nginx=1.26.*
         state: present
         update_cache: yes
+        allow_downgrade: yes
 
     - name: Install NestJS CLI globally
       npm:
