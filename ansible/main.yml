@@ -1,0 +1,53 @@
+---
+- name: Deploy NestJS Boilerplate
+  hosts: hng
+  become: yes
+
+  vars:
+    app_dir: /opt/stage_5b
+    app_user: hng 
+    db_name: admindb
+    db_user: admin
+    db_password: dbpassword
+
+  tasks:
+  #create hng user
+    - name: Create hng user
+      user:
+        name: "{{ app_user }}"
+        groups: sudo
+        shell: /bin/bash
+
+  #run apt update
+    - name: Update apt cache
+      apt: update_cache=yes
+    
+  #clone repo into the app dir
+    - name: Clone repository
+      git:
+        repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
+        version: devops
+        dest: "{{ app_dir }}"
+      become_user: "{{ app_user }}"
+
+  #install necessary dependencies 
+    - name: Install base dependencies
+      apt:
+        name: 
+          - git 
+          - npm
+          - postgresql
+          - 
+
+  #install nestjs globally
+    - name: Install NestJS CLI globally
+      npm:
+        name: '@nestjs/cli'
+        global: yes
+
+  #install projects dependencies  
+    - name: Install project dependencies
+      npm:
+        path: "{{ app_dir }}"
+        ci: yes
+      become_user: "{{ app_user }}"
