@@ -62,28 +62,19 @@
       apt_key:
         url: 'https://nginx.org/keys/nginx_signing.key'
         state: present
-
-    - name: Download Nginx 1.26 deb package
-      get_url:
-        url: "https://nginx.org/packages/ubuntu/pool/nginx/n/nginx/nginx_1.26.0-1~{{ ansible_distribution_release }}_amd64.deb"
-        dest: "/tmp/nginx_1.26.0-1_amd64.deb"
-
-    - name: Install Nginx 1.26 from deb package
+        
+    - name: Add Nginx official repository
+      apt_repository:
+        repo: 'deb http://nginx.org/packages/ubuntu/ {{ ansible_distribution_release | lower }} nginx'
+        state: present
+        filename: nginx
+        
+    - name: Install Nginx 1.26
       apt:
-        deb: "/tmp/nginx_1.26.0-1_amd64.deb"
-        
-    # - name: Add Nginx official repository
-    #   apt_repository:
-    #     repo: 'deb http://nginx.org/packages/ubuntu/ {{ ansible_distribution_release | lower }} nginx'
-    #     state: present
-    #     filename: nginx
-        
-    # - name: Install Nginx 1.26
-    #   apt:
-    #     name: nginx=1.26.0
-    #     state: present
-    #     update_cache: yes
-    #     allow_downgrade: yes
+        name: nginx=1.26.*
+        state: present
+        update_cache: yes
+        allow_downgrade: yes
 
     - name: Install NestJS CLI globally
       npm:
