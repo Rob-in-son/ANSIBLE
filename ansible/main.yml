@@ -37,6 +37,11 @@
         curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
         sudo apt-get install -y nodejs
 
+    - name: Ensure directory exists
+      file:
+        path: /opt/my_app
+        state: directory
+
     - name: Clone repository
       git:
         repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
