@@ -42,7 +42,13 @@
         repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
         version: devops
         dest: "{{ app_dir }}"
-      become_user: "{{ app_user }}"
+
+    - name: Set ownership of cloned repository
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: yes
 
     - name: Install base dependencies
       apt:
@@ -50,8 +56,13 @@
           - git 
           - npm
           - postgresql
-          - nginx
         state: present
+    
+    - name: Install Nginx 1.26
+      apt:
+        name: nginx=1.26.*
+        state: present
+        update_cache: yes
 
     - name: Install NestJS CLI globally
       npm:
@@ -189,3 +200,9 @@
         name: nestjs
         state: restarted
         daemon_reload: yes
+        
+    - name: Enable application service
+      systemd:
+        name: nestjs
+        enabled: yes
+        state: started

@@ -3,6 +3,7 @@ Description=NestJS Application
 After=network.target
 
 [Service]
+Environment=HOST=127.0.0.1
 User={{ app_user }}
 WorkingDirectory={{ app_dir }}
 ExecStart=/usr/bin/npm run start:dev
