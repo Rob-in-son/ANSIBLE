@@ -60,7 +60,7 @@
     
     - name: Install Nginx 1.26
       apt:
-        name: nginx=1.26.*
+        name: nginx=1.26.0
         state: present
         update_cache: yes
 
@@ -200,7 +200,7 @@
         name: nestjs
         state: restarted
         daemon_reload: yes
-        
+
     - name: Enable application service
       systemd:
         name: nestjs
