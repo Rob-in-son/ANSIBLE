@@ -150,6 +150,14 @@
         executable: /bin/bash
       become: yes
 
+    - name: Create secrets directory
+      file:
+        path: /var/secrets
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Save PostgreSQL credentials
       copy:
         content: "DB_USER={{ db_user }}\nDB_PASSWORD={{ db_password }}"
