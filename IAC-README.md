@@ -87,9 +87,9 @@ Nginx logs are stored in:
 
 ## Security
 
-UFW is configured to allow only SSH (port 22) and HTTP (port 80) traffic
-The application runs on port 3000, which is not directly accessible from outside
-PostgreSQL credentials are stored in /var/secrets/pg_pw.txt
+- UFW is configured to allow only SSH (port 22) and HTTP (port 80) traffic
+- The application runs on port 3000, which is not directly accessible from outside
+- PostgreSQL credentials are stored in /var/secrets/pg_pw.txt
 
 ## Troubleshooting
 If you encounter issues with the deployment:
