@@ -88,6 +88,7 @@
           - git 
           - npm
           - postgresql
+          - ufw
         state: present
 
     - name: Add Nginx GPG key
@@ -207,6 +208,46 @@
         enabled: yes
       become: yes
 
+    - name: Configure UFW
+      block:
+        - name: Reset UFW to default
+          ufw:
+            state: reset
+          become: yes
+
+        - name: Allow SSH (port 22)
+          ufw:
+            rule: allow
+            port: '22'
+          become: yes
+
+        - name: Allow HTTP (port 80)
+          ufw:
+            rule: allow
+            port: '80'
+          become: yes
+
+        - name: Deny access to port 3000
+          ufw:
+            rule: deny
+            port: '3000'
+          become: yes
+
+        - name: Enable UFW
+          ufw:
+            state: enabled
+          become: yes
+
+      rescue:
+        - name: UFW Status
+          command: ufw status
+          register: ufw_status
+          become: yes
+
+        - name: Display UFW Status
+          debug:
+            var: ufw_status.stdout_lines
+    
     - name: Remove default Nginx configuration
       file:
         path: /etc/nginx/conf.d/default.conf
