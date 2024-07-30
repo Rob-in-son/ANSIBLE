@@ -37,23 +37,31 @@
         curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
         sudo apt-get install -y nodejs
 
+    - name: Install ACL
+      apt:
+        name: acl
+        state: present
+      become: yes
+
     - name: Ensure app directory exists
       file:
         path: "{{ app_dir }}"
         state: directory
-        owner: "{{ app_user }}"
-        group: "{{ app_user }}"
         mode: '0755'
+      become: yes
 
     - name: Clone repository
-      git:
-        repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
-        version: devops
-        dest: "{{ app_dir }}"
-        force: yes
       become: yes
-      become_user: "{{ app_user }}"
-      become_method: sudo
+      shell: |
+        su - {{ app_user }} -c "git clone https://github.com/hngprojects/hng_boilerplate_nestjs.git {{ app_dir }} --branch devops --single-branch"
+
+    - name: Ensure app_user owns app directory
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: yes
+      become: yes
 
     - name: Install base dependencies
       apt:
