@@ -65,7 +65,6 @@ ansible-playbook main.yml -i inventory.yml -v
 - Configures UFW firewall
 - Sets up the application as a systemd service
 
-
 ## Configuration
 The playbook uses several variables that can be customized in the vars section of main.yml, including:
 
