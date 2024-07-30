@@ -42,6 +42,19 @@
         path: /opt/my_app
         state: directory
 
+    - name: Ensure correct ownership of app directory
+      file:
+        path: "{{ app_dir }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        recurse: yes
+      become: yes
+
+    - name: Add app directory to Git safe.directory
+      become: yes
+      become_user: "{{ app_user }}"
+      command: git config --global --add safe.directory {{ app_dir }}
+
     - name: Check if repository is already cloned
       stat:
         path: "{{ app_dir }}/.git"
@@ -52,8 +65,10 @@
         repo: https://github.com/hngprojects/hng_boilerplate_nestjs.git
         version: devops
         dest: "{{ app_dir }}"
-        update: yes
+        force: yes
       when: not git_repo.stat.exists
+      become: yes
+      become_user: "{{ app_user }}"
 
     - name: Update repository if already cloned
       git:
@@ -61,7 +76,10 @@
         version: devops
         dest: "{{ app_dir }}"
         update: yes
+        force: yes
       when: git_repo.stat.exists
+      become: yes
+      become_user: "{{ app_user }}"
 
     - name: Install base dependencies
       apt:
