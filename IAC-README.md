@@ -75,12 +75,12 @@ The playbook uses several variables that can be customized in the vars section o
 - And more
 
 ## Logging
-Application logs are stored in:
+### Application logs are stored in:
 
 - /var/log/stage_5b/out.log
 - /var/log/stage_5b/error.log
 
-Nginx logs are stored in:
+### Nginx logs are stored in:
 
 /var/log/nginx/stage_5b_access.log
 /var/log/nginx/stage_5b_error.log
