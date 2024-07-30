@@ -173,14 +173,21 @@
         global: yes
         state: present
 
+    - name: Check if migrations exist
+      find:
+        paths: "{{ app_dir }}/db/migrations"
+        patterns: "*.ts"
+      register: existing_migrations
+
     - name: Generate migration file
       shell: cd {{ app_dir }} && npm run migration:generate
       become_user: "{{ app_user }}"
+      when: existing_migrations.matched == 0
 
     - name: Run migrations
       shell: cd {{ app_dir }} && npm run migration:run
       become_user: "{{ app_user }}"
-
+      when: existing_migrations.matched == 0
 
     - name: Copy RabbitMQ installation script
       copy:
