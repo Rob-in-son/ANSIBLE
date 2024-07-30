@@ -5,6 +5,7 @@
 
   vars:
     app_dir: /opt/stage_5b
+    rabbitmq_password: guest
     log_dir: /var/log/stage_5b
     app_user: hng 
     db_name: admindb
@@ -68,7 +69,7 @@
       become: yes
       become_user: "{{ app_user }}"
       git:
-        repo: 'https://github.com/Rob-in-son/hng_boilerplate_nestjs.git'
+        repo: 'https://github.com/hngprojects/hng_boilerplate_nestjs.git'
         version: devops
         dest: "{{ app_dir }}"
         force: yes
@@ -189,25 +190,15 @@
     #   become_user: "{{ app_user }}"
     #   when: existing_migrations.matched == 0
 
-    - name: Copy RabbitMQ installation script
-      become_user: "{{ app_user }}"
-      copy:
-        src: "{{ app_dir }}/install_rmq.sh"
-        dest: "/tmp/install_rmq.sh"
-        mode: '0755'
-        remote_src: yes
-      become: yes
-
     - name: Install RabbitMQ
-      become_user: "{{ app_user }}"
-      command: /tmp/install_rmq.sh
-      become: yes
-      register: rabbitmq_installation
-      changed_when: rabbitmq_installation.rc == 0
+      apt:
+        name: rabbitmq-server
+        state: present
+        update_cache: yes
 
-    - name: Display RabbitMQ installation output
-      debug:
-        var: rabbitmq_installation.stdout_lines
+    - name: Set RabbitMQ default user and password
+      ansible.builtin.shell:
+        cmd: rabbitmqctl change_password guest {{ rabbitmq_password }}
 
     - name: Ensure RabbitMQ service is enabled and started
       systemd:
