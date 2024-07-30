@@ -51,7 +51,9 @@
         version: devops
         dest: "{{ app_dir }}"
         force: yes
+      become: yes
       become_user: "{{ app_user }}"
+      become_method: sudo
 
     - name: Install base dependencies
       apt:
