@@ -43,17 +43,35 @@
         state: present
       become: yes
 
+    - name: Check if app directory exists and is not empty
+      stat:
+        path: "{{ app_dir }}"
+      register: app_dir_stat
+
+    - name: Remove existing app directory if it exists and is not empty
+      file:
+        path: "{{ app_dir }}"
+        state: absent
+      when: app_dir_stat.stat.exists and app_dir_stat.stat.size > 0
+      become: yes
+
     - name: Ensure app directory exists
       file:
         path: "{{ app_dir }}"
         state: directory
         mode: '0755'
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
       become: yes
 
     - name: Clone repository
       become: yes
-      shell: |
-        su - {{ app_user }} -c "git clone https://github.com/hngprojects/hng_boilerplate_nestjs.git {{ app_dir }} --branch devops --single-branch"
+      become_user: "{{ app_user }}"
+      git:
+        repo: 'https://github.com/hngprojects/hng_boilerplate_nestjs.git'
+        version: devops
+        dest: "{{ app_dir }}"
+        force: yes
 
     - name: Ensure app_user owns app directory
       file:
