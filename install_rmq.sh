@@ -1,3 +1,4 @@
+#!/bin/bash
 sudo apt-get update -y
 #Install Prerequisite Packages:
 sudo apt-get install curl gnupg apt-transport-https -y
