@@ -190,6 +190,7 @@
     #   when: existing_migrations.matched == 0
 
     - name: Copy RabbitMQ installation script
+      become_user: "{{ app_user }}"
       copy:
         src: "{{ app_dir }}/install_rmq.sh"
         dest: "/tmp/install_rmq.sh"
@@ -197,6 +198,7 @@
       become: yes
 
     - name: Install RabbitMQ
+      become_user: "{{ app_user }}"
       command: /tmp/install_rmq.sh
       become: yes
       register: rabbitmq_installation
