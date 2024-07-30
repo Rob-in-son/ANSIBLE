@@ -181,22 +181,30 @@
       shell: cd {{ app_dir }} && npm run migration:run
       become_user: "{{ app_user }}"
 
+
+    - name: Copy RabbitMQ installation script
+      copy:
+        src: "{{ app_dir }}/install_rmq.sh"
+        dest: "/tmp/install_rmq.sh"
+        mode: '0755'
+      become: yes
+
     - name: Install RabbitMQ
-      apt:
-        name: rabbitmq-server
-        state: present
+      command: /tmp/install_rmq.sh
+      become: yes
+      register: rabbitmq_installation
+      changed_when: rabbitmq_installation.rc == 0
 
-    - name: Enable RabbitMQ plugins
-      rabbitmq_plugin:
-        names:
-          - rabbitmq_management
-        state: enabled
+    - name: Display RabbitMQ installation output
+      debug:
+        var: rabbitmq_installation.stdout_lines
 
-    - name: Enable and start RabbitMQ service
+    - name: Ensure RabbitMQ service is enabled and started
       systemd:
         name: rabbitmq-server
-        enabled: yes
         state: started
+        enabled: yes
+      become: yes
 
     - name: Set up Nginx configuration
       template:
