@@ -195,6 +195,7 @@
         src: "{{ app_dir }}/install_rmq.sh"
         dest: "/tmp/install_rmq.sh"
         mode: '0755'
+        remote_src: yes
       become: yes
 
     - name: Install RabbitMQ
