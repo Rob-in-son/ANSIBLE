@@ -18,7 +18,7 @@
     db_entities: "dist/src/modules/**/entities/**/*.entity{.ts,.js}"
     db_migrations: "dist/**/migrations/*{.ts,.js}"
     db_type: postgres
-    db_ssl: "true"
+    db_ssl: "false"
     jwt_secret: someSecrets
     jwt_expiry_timeframe: 3600
 
