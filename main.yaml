@@ -7,6 +7,7 @@
     app_dir: /opt/stage_5b
     rabbitmq_password: guest
     log_dir: /var/log/stage_5b
+    repo_url: https://github.com/hngprojects/hng_boilerplate_nestjs.git
     app_user: hng 
     db_name: admindb
     db_user: admin
@@ -69,7 +70,7 @@
       become: yes
       become_user: "{{ app_user }}"
       git:
-        repo: 'https://github.com/hngprojects/hng_boilerplate_nestjs.git'
+        repo: "{{ repo_url }}"
         version: devops
         dest: "{{ app_dir }}"
         force: yes
