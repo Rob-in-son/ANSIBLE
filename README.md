@@ -45,7 +45,7 @@ all:
 ## Playbook Structure
 - main.yml: The main Ansible playbook
 - nginx.conf.j2: Nginx configuration template
-- estjs.service.j2: Systemd service configuration template
+- nestjs.service.j2: Systemd service configuration template
 
 
 ## Deployment
